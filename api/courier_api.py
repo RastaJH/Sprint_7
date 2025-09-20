@@ -1,16 +1,16 @@
 import requests
-from data import COURIER_URL, COURIER_LOGIN_URL
+import allure
+from data import BASE_URL
 
 class CourierAPI:
+    @allure.step("Создание курьера")
+    def create_courier(self, payload):
+        return requests.post(f"{BASE_URL}/courier", json=payload)
 
-    @staticmethod
-    def create_courier(payload):
-        return requests.post(COURIER_URL, json=payload)
+    @allure.step("Авторизация курьера")
+    def login_courier(self, payload):
+        return requests.post(f"{BASE_URL}/courier/login", json=payload)
 
-    @staticmethod
-    def login_courier(payload):
-        return requests.post(COURIER_LOGIN_URL, json=payload)
-
-    @staticmethod
-    def delete_courier(courier_id):
-        return requests.delete(f"{COURIER_URL}/{courier_id}")
+    @allure.step("Удаление курьера")
+    def delete_courier(self, courier_id):
+        return requests.delete(f"{BASE_URL}/courier/{courier_id}")

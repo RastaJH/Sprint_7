@@ -1,18 +1,26 @@
-import allure
-from api.courier_api import CourierAPI
+import pytest
+from data import EXPECTED_RESPONSES
+from helpers import generate_unique_courier
 
-@allure.title("Курьера можно создать")
-def test_create_courier_success(courier_data):
-    response = CourierAPI.create_courier(courier_data)
-    assert response.status_code == 201
-    assert response.json() == {"ok": True}
+@pytest.mark.courier
+class TestCourierCreation:
+    def test_create_courier_success(self, courier_api):
+        courier = generate_unique_courier()
+        resp = courier_api.create_courier(courier)
+        assert resp.status_code == 201
+        assert resp.json() == EXPECTED_RESPONSES["courier_created"]
 
-@allure.title("Нельзя создать двух одинаковых курьеров")
-def test_create_duplicate_courier(courier_data, create_courier):
-    response = CourierAPI.create_courier(courier_data)
-    assert response.status_code == 409
+    def test_create_same_courier_fails(self, courier_api):
+        courier = generate_unique_courier()
+        courier_api.create_courier(courier)
+        resp = courier_api.create_courier(courier)
+        assert resp.status_code == 409
+        assert resp.json() == EXPECTED_RESPONSES["login_conflict"]
 
-@allure.title("Нельзя создать курьера без обязательных полей")
-def test_create_courier_without_required_field():
-    response = CourierAPI.create_courier({"login": "onlylogin"})
-    assert response.status_code in (400, 422)
+    @pytest.mark.parametrize("field", ["login", "password"])
+    def test_create_courier_missing_field(self, courier_api, field):
+        courier = generate_unique_courier()
+        courier.pop(field)
+        resp = courier_api.create_courier(courier)
+        assert resp.status_code == 400
+        assert resp.json() == EXPECTED_RESPONSES["missing_field"]

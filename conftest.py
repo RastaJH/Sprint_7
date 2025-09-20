@@ -1,22 +1,30 @@
 import pytest
 import requests
-from data import COURIER_URL, COURIER_LOGIN_URL
+from data import BASE_URL
+from helpers import generate_unique_courier
+from api.courier_api import CourierAPI 
+from api.order_api import OrderAPI      
 
 @pytest.fixture
-def courier_data():
-    return {
-        "login": "testuser123",
-        "password": "testpass123",
-        "firstName": "testname"
-    }
+def courier_api():
+    return CourierAPI()
 
 @pytest.fixture
-def create_courier(courier_data):
-    resp = requests.post(COURIER_URL, json=courier_data)
-    assert resp.status_code in (201, 409)
-    yield courier_data
-    login_payload = {"login": courier_data["login"], "password": courier_data["password"]}
-    login_response = requests.post(COURIER_LOGIN_URL, json=login_payload)
-    if login_response.status_code == 200 and "id" in login_response.json():
-        courier_id = login_response.json()["id"]
-        requests.delete(f"{COURIER_URL}/{courier_id}")
+def order_api():
+    return OrderAPI()
+
+@pytest.fixture
+def new_courier():
+    courier = generate_unique_courier()
+    resp = requests.post(f"{BASE_URL}/courier", json=courier)
+    if resp.status_code == 201:
+        login_resp = requests.post(f"{BASE_URL}/courier/login", json={
+            "login": courier["login"],
+            "password": courier["password"]
+        })
+        courier_id = login_resp.json().get("id")
+        yield courier, courier_id
+        if courier_id:
+            requests.delete(f"{BASE_URL}/courier/{courier_id}")
+    else:
+        yield courier, None

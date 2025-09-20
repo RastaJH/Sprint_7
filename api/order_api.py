@@ -1,12 +1,12 @@
 import requests
-from data import ORDER_URL
+import allure
+from data import BASE_URL
 
 class OrderAPI:
+    @allure.step("Создание заказа")
+    def create_order(self, payload):
+        return requests.post(f"{BASE_URL}/orders", json=payload)
 
-    @staticmethod
-    def create_order(payload):
-        return requests.post(ORDER_URL, json=payload)
-
-    @staticmethod
-    def get_orders():
-        return requests.get(ORDER_URL)
+    @allure.step("Получение списка заказов")
+    def get_orders(self):
+        return requests.get(f"{BASE_URL}/orders")
